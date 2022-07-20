@@ -63,7 +63,8 @@ class Computadora(models.Model):
             teclado.update(stock=models.F('stock') - 1)            
             super(Computadora, self).save(*args, **kwargs)
         else:
-            return
+            print('Hola desde el ELSE')
+            return False
 
     def __str__(self) -> str:
         return f'{self.nombre}'
