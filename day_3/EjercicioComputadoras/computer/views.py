@@ -41,6 +41,12 @@ class OrdenViewSet(viewsets.ModelViewSet):
     queryset = Orden.objects.all()
     serializer_class = OrdenSerializer
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as ve:
+            return views.Response({"message": ve.message, "stock": False})
+
 
 class ComputadoraViewSet(viewsets.ModelViewSet):
     queryset = Computadora.objects.all()
@@ -50,4 +56,4 @@ class ComputadoraViewSet(viewsets.ModelViewSet):
         try:
             return super().create(request, *args, **kwargs)
         except ValidationError as ve:
-            return views.Response({"message": ve.message})
+            return views.Response({"message": ve.message, "stock": False})

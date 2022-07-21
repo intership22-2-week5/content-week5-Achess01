@@ -95,8 +95,7 @@ class Computadora(models.Model):
     costo = models.FloatField(default=0)
     fecha_creacion = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
-        """ Reducir stocks al crear computadora """
+    def get_components(self):
         monitor = Monitor.objects.filter(pk=self.monitor.id)
         raton = Raton.objects.filter(pk=self.raton.id)
         teclado = Teclado.objects.filter(pk=self.teclado.id)
@@ -104,17 +103,25 @@ class Computadora(models.Model):
         cpu = CPU.objects.filter(pk=self.cpu.id)
         altavoz = Altavoz.objects.filter(pk=self.altavoz.id)
         components = (monitor, raton, teclado, placabase, cpu, altavoz)
+        return components
+
+    def save(self, *args, **kwargs):
+        """ Obtener todos los componentes """
+        components = self.get_components()
         no_stock_message = "No stock: "
         there_is_stock = True
 
+        """ Cantidad de computadoras mayor a 0 """
         if(self.cantidad < 1):
             raise ValidationError('Cantidad menor a 1')
-        """ Verificando stock """
+
+        """ Verificando stock de cada componente"""
         for component in components:
             if not (len(component) > 0 and component[0].stock >= self.cantidad):
                 no_stock_message += f'{component[0].__str__()}  '
                 there_is_stock = False
 
+        """ Si existe stock de todos los componentes """
         if there_is_stock:
             """ Restando stock y calculando el costo de al computadora """
             costo = 0
