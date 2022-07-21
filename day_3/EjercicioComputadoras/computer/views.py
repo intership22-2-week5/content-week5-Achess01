@@ -1,9 +1,10 @@
+from django.forms import ValidationError
 from django.shortcuts import render
 
 from rest_framework import viewsets, views
 
-from .serializers import ComputadoraSerializer, MonitorSerializer, OrdenSerializer, RatonSerializer, TecladoSerializer
-from .models import Raton, Teclado, Monitor, Orden, Computadora
+from .serializers import ComputadoraSerializer, MonitorSerializer, OrdenSerializer, RatonSerializer, TecladoSerializer, PlacaBaseSerializer, CPUSerializer, AltavozSerializer
+from .models import Raton, Teclado, Monitor, Orden, Computadora, PlacaBase, CPU, Altavoz
 
 
 class RatonViewSet(viewsets.ModelViewSet):
@@ -21,6 +22,21 @@ class MonitorViewSet(viewsets.ModelViewSet):
     serializer_class = MonitorSerializer
 
 
+class PlacaBaseViewSet(viewsets.ModelViewSet):
+    queryset = PlacaBase.objects.all()
+    serializer_class = PlacaBaseSerializer
+
+
+class CPUViewSet(viewsets.ModelViewSet):
+    queryset = CPU.objects.all()
+    serializer_class = CPUSerializer
+
+
+class AltavozViewSet(viewsets.ModelViewSet):
+    queryset = Altavoz.objects.all()
+    serializer_class = AltavozSerializer
+
+
 class OrdenViewSet(viewsets.ModelViewSet):
     queryset = Orden.objects.all()
     serializer_class = OrdenSerializer
@@ -31,8 +47,7 @@ class ComputadoraViewSet(viewsets.ModelViewSet):
     serializer_class = ComputadoraSerializer
 
     def create(self, request, *args, **kwargs):
-        pc = super().create(request, *args, **kwargs)        
-        if pc.data['id'] is not None:
-            return pc
-        else:
-            return views.Response({"message": "No hay stock"})
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as ve:
+            return views.Response({"message": ve.message})

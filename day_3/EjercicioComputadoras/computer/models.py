@@ -1,18 +1,44 @@
-from statistics import mode
 from django.db import models
+from django.forms import ValidationError
+
 """ Una orden contiene a todas las computadoras """
 
 
 """ Dispositivo de entrada """
 
 
-class DispositivoEntrada(models.Model):
-    entrada = models.CharField(max_length=50)
+class Componente(models.Model):
+    class Meta:
+        abstract = True
+    tipo = models.CharField(max_length=255, default='Componente')
     marca = models.CharField(max_length=255)
+    costo = models.FloatField(default=0)
     stock = models.IntegerField(default=1)
+    descripcion = models.CharField(max_length=255, default="Componente")
+    fecha_ingreso = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self) -> str:
-        return f'{self.entrada} ({self.marca})'
+        return f'({self.marca}) ({self.stock})'
+
+
+class DispositivoSalida(Componente):
+    class Meta:
+        abstract = True
+
+
+class DispositivoInterno(Componente):
+    class Meta:
+        abstract = True
+
+
+class DispositivoEntrada(Componente):
+    entrada = models.CharField(max_length=50, default='usb')
+
+    class Meta:
+        abstract = True
+
+    def __str__(self) -> str:
+        return f'{self.entrada} {super().__str__()}'
 
 
 class Raton(DispositivoEntrada):
@@ -27,13 +53,29 @@ class Teclado(DispositivoEntrada):
         return f'Teclado {super().__str__()}'
 
 
-class Monitor(models.Model):
+class Monitor(DispositivoSalida):
     tamanio = models.CharField(max_length=255)
-    marca = models.CharField(max_length=255)
-    stock = models.IntegerField(default=1)
 
     def __str__(self) -> str:
-        return f'Monitor {self.tamanio} ({self.marca})'
+        return f'Monitor {self.tamanio} {super().__str__()}'
+
+
+class Altavoz(DispositivoSalida):
+
+    def __str__(self) -> str:
+        return f'Altavoz {super().__str__()}'
+
+
+class CPU(DispositivoInterno):
+
+    def __str__(self) -> str:
+        return f'CPU {super().__str__()}'
+
+
+class PlacaBase(DispositivoInterno):
+
+    def __str__(self) -> str:
+        return f'Placa Madre {super().__str__()}'
 
 
 class Computadora(models.Model):
@@ -43,28 +85,48 @@ class Computadora(models.Model):
     raton = models.ForeignKey(Raton, on_delete=models.SET_NULL, null=True)
     teclado = models.ForeignKey(
         Teclado, on_delete=models.SET_NULL, null=True)
-    disponible = models.BooleanField(default=True)
+    altavoz = models.ForeignKey(
+        Altavoz, on_delete=models.SET_NULL, null=True)
+    cpu = models.ForeignKey(
+        CPU, on_delete=models.SET_NULL, null=True)
+    placabase = models.ForeignKey(
+        PlacaBase, on_delete=models.SET_NULL, null=True)
+    cantidad = models.IntegerField(default=1)
+    costo = models.FloatField(default=0)
+    fecha_creacion = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         """ Reducir stocks al crear computadora """
         monitor = Monitor.objects.filter(pk=self.monitor.id)
         raton = Raton.objects.filter(pk=self.raton.id)
         teclado = Teclado.objects.filter(pk=self.teclado.id)
+        placabase = PlacaBase.objects.filter(pk=self.placabase.id)
+        cpu = CPU.objects.filter(pk=self.cpu.id)
+        altavoz = Altavoz.objects.filter(pk=self.altavoz.id)
+        components = (monitor, raton, teclado, placabase, cpu, altavoz)
+        no_stock_message = "No stock: "
+        there_is_stock = True
 
-        if (
-            len(monitor) > 0 and monitor[0].stock > 0
-            and
-            len(raton) > 0 and raton[0].stock > 0
-            and
-            len(teclado) > 0 and teclado[0].stock > 0
-        ):
-            monitor.update(stock=models.F('stock') - 1)
-            raton.update(stock=models.F('stock') - 1)
-            teclado.update(stock=models.F('stock') - 1)            
+        if(self.cantidad < 1):
+            raise ValidationError('Cantidad menor a 1')
+        """ Verificando stock """
+        for component in components:
+            if not (len(component) > 0 and component[0].stock >= self.cantidad):
+                no_stock_message += f'{component[0].__str__()}  '
+                there_is_stock = False
+
+        if there_is_stock:
+            """ Restando stock y calculando el costo de al computadora """
+            costo = 0
+            for component in components:
+                component.update(stock=models.F('stock') - self.cantidad)
+                costo += component[0].costo
+
+            self.costo = costo
+
             super(Computadora, self).save(*args, **kwargs)
         else:
-            print('Hola desde el ELSE')
-            return False
+            raise ValidationError(no_stock_message)
 
     def __str__(self) -> str:
         return f'{self.nombre}'
