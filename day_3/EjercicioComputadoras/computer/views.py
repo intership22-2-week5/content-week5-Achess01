@@ -43,9 +43,10 @@ class OrdenViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
+            # print(request.data)
             return super().create(request, *args, **kwargs)
         except ValidationError as ve:
-            return views.Response({"message": ve.message, "stock": False})
+            return views.Response({"message": ve.message, "status": False})
 
 
 class ComputadoraViewSet(viewsets.ModelViewSet):
@@ -54,6 +55,7 @@ class ComputadoraViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            return super().create(request, *args, **kwargs)
+            super().create(request, *args, **kwargs)
+            return views.Response({"message": "Computer created successfully", "status": True})
         except ValidationError as ve:
-            return views.Response({"message": ve.message, "stock": False})
+            return views.Response({"message": ve.message, "status": False})

@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.forms import ValidationError
 
 """ Una orden contiene a todas las computadoras """
@@ -106,6 +106,10 @@ class Computadora(models.Model):
         return components
 
     def save(self, *args, **kwargs):
+        """ Comprobar si actualiza """
+        if('update' in kwargs and kwargs['update'] == True):
+            print('Actualizando...')
+            return super(Computadora, self).save()
         """ Obtener todos los componentes """
         components = self.get_components()
         no_stock_message = "No stock: "
@@ -131,17 +135,18 @@ class Computadora(models.Model):
 
             self.costo = costo
 
-            super(Computadora, self).save(*args, **kwargs)
+            return super(Computadora, self).save(*args, **kwargs)
         else:
             raise ValidationError(no_stock_message)
 
     def __str__(self) -> str:
-        return f'{self.nombre}'
+        return f'{self.nombre} Q{self.costo} ({self.cantidad})'
 
 
 class Orden(models.Model):
     description = models.CharField(max_length=255, default="Orden")
     computadoras = models.ManyToManyField(Computadora)
+    total = models.FloatField(default=0)
 
     def __str__(self) -> str:
         return f'{self.description}'
