@@ -32,7 +32,7 @@ class OrdenSerializer(serializers.ModelSerializer):
         there_is_cantidad = True
         no_cantidad_message = "No stock: "
         total_price = 0
-
+        """ Check for more than one of a same computer """
         for pc in computadoras:
             if pc.cantidad < 1:
                 there_is_cantidad = False
@@ -43,7 +43,8 @@ class OrdenSerializer(serializers.ModelSerializer):
                 pc.cantidad -= 1
                 pc.save(update=True)
                 total_price += pc.costo
-                attrs.update({"total": total_price})
+
+            attrs.update({"total": total_price})
         else:
             raise ValidationError(no_cantidad_message)
 
@@ -52,6 +53,7 @@ class OrdenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Orden
         fields = '__all__'
+        read_only_fields = ['total']
 
 
 class ComputadoraSerializer(serializers.ModelSerializer):
