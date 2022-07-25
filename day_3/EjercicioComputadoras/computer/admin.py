@@ -1,6 +1,10 @@
+# Django
 from django.contrib import admin
 
-from .models import Raton, Teclado, Monitor, Orden, Computadora, PlacaBase, CPU, Altavoz
+# Models
+from .models.components import Raton, Teclado, Monitor, PlacaBase, CPU, Altavoz
+from .models.computer import Computadora
+from .models.order import Orden
 
 """ Registrando modelos al admin """
 admin.site.register(Raton)

@@ -1,8 +1,13 @@
+# Django
 from django.db import router
 
+# Rest framework
 from rest_framework.routers import DefaultRouter
 
-from .views import RatonViewSet, TecladoViewSet, MonitorViewSet, OrdenViewSet, ComputadoraViewSet, PlacaBaseViewSet, CPUViewSet, AltavozViewSet
+# Viewsets
+from .viewsets.components import RatonViewSet, TecladoViewSet, MonitorViewSet, PlacaBaseViewSet, CPUViewSet, AltavozViewSet
+from .viewsets.computer import ComputadoraViewSet
+from .viewsets.order import OrdenViewSet
 
 router = DefaultRouter()
 
