@@ -42,8 +42,10 @@ INSTALLED_APPS = [
     'computer.apps.ComputerConfig',
 
     # third party apps
-    'rest_framework'
+    'rest_framework',
+    'django_filters',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

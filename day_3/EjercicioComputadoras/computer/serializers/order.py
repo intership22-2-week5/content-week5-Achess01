@@ -2,6 +2,7 @@
 
 # Django
 from django.forms import ValidationError
+from django.http import QueryDict
 
 # Rest framework
 from rest_framework import serializers
@@ -16,8 +17,7 @@ class OrdenSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        ids = self.context['request'].data.getlist('computadoras')
-        computadoras = Computadora.objects.filter(pk__in=ids)
+        computadoras = attrs.get('computadoras')
         there_is_cantidad = True
         no_cantidad_message = "No stock: "
         total_price = 0
@@ -43,3 +43,4 @@ class OrdenSerializer(serializers.ModelSerializer):
         model = Orden
         fields = '__all__'
         read_only_fields = ['total']
+        depth = 1
